@@ -21,6 +21,5 @@ export function baseOptions(): BaseLayoutProps {
 				</>
 			),
 		},
-		githubUrl: "https://github.com/atheeq-rhxn/mangowc-docs",
 	};
 }
