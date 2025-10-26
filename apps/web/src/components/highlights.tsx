@@ -32,13 +32,13 @@ export function Highlights() {
 	];
 
 	return (
-		<section className="bg-card/30 px-4 py-20 sm:px-6 lg:px-8">
+		<section className="bg-muted/20 px-4 py-20 sm:px-6 lg:px-8">
 			<div className="mx-auto max-w-7xl">
 				<div className="mb-16 text-center">
 					<h2 className="mb-4 text-balance font-bold text-4xl text-foreground sm:text-5xl">
 						Why MangoWC
 					</h2>
-					<p className="mx-auto max-w-2xl text-balance text-lg text-muted-foreground">
+					<p className="mx-auto max-w-2xl text-balance text-foreground/70 text-lg">
 						In addition to basic WM functionality, MangoWC provides excellent
 						features
 					</p>
@@ -48,12 +48,12 @@ export function Highlights() {
 					{highlights.map((highlight, _index) => (
 						<div
 							key={highlight.title}
-							className="rounded-lg border border-border bg-background p-6 transition-colors hover:border-accent/50"
+							className="rounded-lg border border-border bg-background p-6 transition-colors hover:border-primary"
 						>
 							<h3 className="mb-2 font-bold text-foreground text-lg">
 								{highlight.title}
 							</h3>
-							<p className="text-muted-foreground">{highlight.description}</p>
+							<p className="text-foreground/80">{highlight.description}</p>
 						</div>
 					))}
 				</div>

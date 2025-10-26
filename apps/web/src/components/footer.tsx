@@ -17,7 +17,7 @@ export function Footer() {
 							/>
 							<span className="font-bold text-foreground">MangoWC</span>
 						</div>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-foreground/70 text-sm">
 							A minimal, fast, and modern Wayland compositor.
 						</p>
 					</div>
@@ -30,7 +30,7 @@ export function Footer() {
 									href="https://github.com/DreamMaoMao/mangowc"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-muted-foreground text-sm transition-colors hover:text-accent"
+									className="text-foreground/70 text-sm transition-colors hover:text-primary"
 								>
 									GitHub
 								</a>
@@ -38,7 +38,7 @@ export function Footer() {
 							<li>
 								<Link
 									href="/docs"
-									className="text-muted-foreground text-sm transition-colors hover:text-accent"
+									className="text-foreground/70 text-sm transition-colors hover:text-primary"
 								>
 									Docs
 								</Link>
@@ -54,7 +54,7 @@ export function Footer() {
 									href="https://discord.gg/CPjbDxesh5"
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-muted-foreground text-sm transition-colors hover:text-accent"
+									className="text-foreground/70 text-sm transition-colors hover:text-primary"
 								>
 									Discord
 								</a>
@@ -69,7 +69,7 @@ export function Footer() {
 								href="https://github.com/DreamMaoMao/mangowc"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="text-muted-foreground transition-colors hover:text-accent"
+								className="text-foreground/70 transition-colors hover:text-primary"
 								aria-label="GitHub"
 							>
 								<span className="sr-only">GitHub</span>
@@ -87,7 +87,7 @@ export function Footer() {
 								href="https://discord.gg/CPjbDxesh5"
 								target="_blank"
 								rel="noopener noreferrer"
-								className="text-muted-foreground transition-colors hover:text-accent"
+								className="text-foreground/70 transition-colors hover:text-primary"
 								aria-label="Discord"
 							>
 								<span className="sr-only">Discord</span>

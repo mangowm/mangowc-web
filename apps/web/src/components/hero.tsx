@@ -6,20 +6,20 @@ export function Hero() {
 	return (
 		<section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
 			{/* Background grid effect */}
-			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,.05)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+			<div className="grid-bg pointer-events-none absolute inset-0 bg-[size:4rem_4rem]" />
 
 			<div className="relative z-10 mx-auto max-w-4xl text-center">
 				<div className="mb-6 inline-block">
-					<span className="font-mono font-semibold text-accent text-sm">
+					<span className="font-mono font-semibold text-primary text-sm">
 						Wayland Compositor
 					</span>
 				</div>
 
 				<h1 className="mb-6 text-balance font-bold text-5xl text-foreground leading-tight sm:text-6xl lg:text-7xl">
-					Lightweight, <span className="text-accent">Feature-Rich</span>
+					Lightweight, <span className="text-primary">Feature-Rich</span>
 				</h1>
 
-				<p className="mx-auto mb-12 max-w-2xl text-balance text-lg text-muted-foreground sm:text-xl">
+				<p className="mx-auto mb-12 max-w-2xl text-balance text-foreground/70 text-lg sm:text-xl">
 					MangoWC is a lightweight, high-performance Wayland compositor built on
 					dwl, designed for speed, flexibility, and a modern, customizable
 					desktop experience.

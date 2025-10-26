@@ -66,7 +66,7 @@ export function Features() {
 					{features.map((feature, index) => (
 						<div
 							key={feature.title}
-							className="group overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur transition-colors hover:border-accent/50"
+							className="group overflow-hidden rounded-xl border border-border bg-card/50 backdrop-blur transition-colors hover:border-primary"
 						>
 							<button
 								type="button"
@@ -98,7 +98,7 @@ export function Features() {
 									aria-label={`${feature.title} demonstration video`}
 								/>
 								{hoveredIndex === index && (
-									<div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors">
+									<div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-colors dark:bg-white/30">
 										<div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent transition-transform hover:scale-110">
 											<svg
 												className="h-6 w-6 text-accent-foreground"
@@ -117,7 +117,7 @@ export function Features() {
 								<h3 className="mb-2 font-bold text-foreground text-xl">
 									{feature.title}
 								</h3>
-								<p className="text-muted-foreground">{feature.description}</p>
+								<p className="text-foreground/70">{feature.description}</p>
 							</div>
 						</div>
 					))}
