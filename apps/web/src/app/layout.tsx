@@ -11,13 +11,13 @@ const SITE_DESCRIPTION =
   "MangoWC is a lightweight, high-performance Wayland compositor built on dwl, designed for speed, flexibility, and a modern, customizable desktop experience.";
 const SITE_URL = "https://mangowc.vercel.app";
 const SITE_OG_IMAGE = "/image.png";
-const IMAGE_VERSION = "1";
+const IMAGE_VERSION = "2";
 const TWITTER_CREATOR = "";
 
 const geist = Geist({ subsets: ["latin"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
 
-const jsonLd = {
+const jsonLdSoftware = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   name: "MangoWC",
@@ -36,10 +36,7 @@ const jsonLd = {
     name: "DreamMaoMao",
     url: "https://github.com/DreamMaoMao",
   },
-  sameAs: [
-    "https://github.com/DreamMaoMao/mangowc",
-    SITE_URL,
-  ],
+  sameAs: ["https://github.com/DreamMaoMao/mangowc", SITE_URL],
   keywords: [
     "wayland compositor",
     "dwl",
@@ -47,6 +44,15 @@ const jsonLd = {
     "lightweight wm",
     "tiling compositor",
   ],
+};
+
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "MangoWC",
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo-512x512.png`,
+  sameAs: ["https://github.com/DreamMaoMao/mangowc"],
 };
 
 export const metadata: Metadata = {
@@ -111,7 +117,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geist.className} ${geistMono.className}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geist.className} ${geistMono.className}`}
+    >
       <body className="flex min-h-screen flex-col font-sans antialiased">
         <a
           href="#main"
@@ -126,7 +136,11 @@ export default function RootLayout({
         <SpeedInsights />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSoftware) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
         />
       </body>
     </html>
