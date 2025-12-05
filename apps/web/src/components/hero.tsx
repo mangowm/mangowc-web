@@ -5,7 +5,7 @@ import { MangowcLayouts } from "@/components/mangowc-layouts";
 
 export function Hero() {
 	return (
-		<section className="relative flex items-center justify-center overflow-hidden px-4 py-20 sm:px-6 lg:px-10 min-h-[85vh]">
+		<section className="relative flex items-center justify-center overflow-hidden px-4 py-20 sm:px-6 lg:px-10 min-h-screen">
 			{/* Background grid */}
 			<div className="grid-bg pointer-events-none absolute inset-0 bg-[size:3rem_3rem]" />
 
