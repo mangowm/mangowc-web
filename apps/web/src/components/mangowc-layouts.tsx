@@ -60,7 +60,7 @@ export function MangowcLayouts() {
 					return layouts[nextIndex] as "tiling" | "scroller" | "grid";
 				});
 				setOrientation("horizontal");
-			}, 2500); // Switch when third window spawns (phase 3 delay)
+			}, 4000); // Switch after third window spawns with buffer for transition
 		} else {
 			if (autoPlayTimerRef.current) {
 				clearInterval(autoPlayTimerRef.current);
