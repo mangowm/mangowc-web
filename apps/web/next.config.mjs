@@ -5,6 +5,7 @@ const withMDX = createMDX();
 const nextConfig = {
 	reactCompiler: false,
 	compress: true,
+	serverExternalPackages: ["@takumi-rs/image-response"],
 	async rewrites() {
 		return [
 			{

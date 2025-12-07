@@ -81,7 +81,7 @@ export async function generateMetadata(
 
 	const baseUrl = "https://mangowc.vercel.app";
 	const pathname = `/docs/${params.slug?.join("/") || ""}`;
-	const ogImage = "/image.webp?v=3";
+	const ogImage = `/og/${params.slug?.join("/") || "index"}`;
 
 	return {
 		title: page.data.title,
