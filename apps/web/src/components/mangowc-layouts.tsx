@@ -15,6 +15,7 @@ import { MonocleLayout } from "./layouts/monocle-layout";
 import { OverviewLayout } from "./layouts/overview-layout";
 import { RightTileLayout } from "./layouts/right-tile-layout";
 import { ScrollerLayout } from "./layouts/scroller-layout";
+import { TgmixLayout } from "./layouts/tgmix-layout";
 import { TileLayout } from "./layouts/tile-layout";
 
 export function MangowcLayouts() {
@@ -27,6 +28,7 @@ export function MangowcLayouts() {
 		| "center-tile"
 		| "right-tile"
 		| "monocle"
+		| "Tgmix"
 	>("tiling");
 	const [orientation, setOrientation] = useState<"horizontal" | "vertical">(
 		"horizontal",
@@ -39,6 +41,7 @@ export function MangowcLayouts() {
 	const formatLabel = (s: string) => {
 		if (s === "center-tile") return "Center Tile";
 		if (s === "right-tile") return "Right Tile";
+		if (s === "Tgmix") return "Tgmix";
 		return s.charAt(0).toUpperCase() + s.slice(1);
 	};
 
@@ -204,6 +207,18 @@ export function MangowcLayouts() {
 									Monocle
 								</span>
 							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => handleLayoutChange("Tgmix")}
+								className="cursor-pointer"
+							>
+								<span
+									className={cn(
+										activeLayout === "Tgmix" && "font-semibold text-primary",
+									)}
+								>
+									{formatLabel("Tgmix")}
+								</span>
+							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
 				</div>
@@ -254,6 +269,7 @@ export function MangowcLayouts() {
 				)}
 				{activeLayout === "right-tile" && <RightTileLayout />}
 				{activeLayout === "monocle" && <MonocleLayout />}
+				{activeLayout === "Tgmix" && <TgmixLayout orientation={orientation} />}
 			</div>
 		</div>
 	);
