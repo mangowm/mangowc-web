@@ -44,9 +44,9 @@ export function SponsorButton() {
 			} else {
 				const res = await fetch(SPONSOR_DATA.QR_SRC);
 				if (!res.ok) throw new Error("Failed to fetch QR code");
-				
+
 				const blob = await res.blob();
-				
+
 				// Check if clipboard supports image writing
 				if (navigator.clipboard && ClipboardItem) {
 					await navigator.clipboard.write([
@@ -58,9 +58,9 @@ export function SponsorButton() {
 				} else {
 					// Fallback: download the image
 					const url = URL.createObjectURL(blob);
-					const link = document.createElement('a');
+					const link = document.createElement("a");
 					link.href = url;
-					link.download = 'sponsor-qr.png';
+					link.download = "sponsor-qr.png";
 					document.body.appendChild(link);
 					link.click();
 					document.body.removeChild(link);
@@ -155,7 +155,7 @@ export function SponsorButton() {
 								<div
 									onClick={() => handleCopy("address")}
 									onKeyDown={(e) => {
-										if (e.key === 'Enter' || e.key === ' ') {
+										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
 											handleCopy("address");
 										}
@@ -170,7 +170,10 @@ export function SponsorButton() {
 											: "border-border/50 hover:border-primary/50",
 									)}
 								>
-									<code className="flex-1 break-all pr-3 font-mono font-semibold text-[10px] text-foreground sm:pr-4 sm:text-xs" title={SPONSOR_DATA.ADDRESS}>
+									<code
+										className="flex-1 break-all pr-3 font-mono font-semibold text-[10px] text-foreground sm:pr-4 sm:text-xs"
+										title={SPONSOR_DATA.ADDRESS}
+									>
 										{SPONSOR_DATA.ADDRESS}
 									</code>
 									<div
