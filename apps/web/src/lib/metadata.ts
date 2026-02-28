@@ -82,3 +82,5 @@ export const baseUrl =
 	!process.env.VERCEL_PROJECT_PRODUCTION_URL
 		? new URL("http://localhost:3001")
 		: new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+
+export const githubPagesBasePath = "/mangowc-web";
