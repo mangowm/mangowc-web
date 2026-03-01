@@ -1,0 +1,3 @@
+{
+  "extends": "@mangowm.github.io/config/tsconfig.base.json"
+}
