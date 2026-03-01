@@ -7,6 +7,12 @@ export const gitConfig = {
   branch: "main",
 };
 
+export const sourceGitConfig = {
+  user: "mangowm",
+  repo: "mangowm.github.io",
+  branch: "main",
+};
+
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {

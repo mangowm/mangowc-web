@@ -9,7 +9,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import { Suspense } from "react";
 
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
-import { baseOptions, gitConfig } from "@/lib/layout.shared";
+import { baseOptions, gitConfig, sourceGitConfig } from "@/lib/layout.shared";
 import { source } from "@/lib/source";
 
 export const Route = createFileRoute("/docs/$")({
@@ -63,7 +63,7 @@ const clientLoader = browserCollections.docs.createClientLoader({
           <LLMCopyButton markdownUrl={markdownUrl} />
           <ViewOptions
             markdownUrl={markdownUrl}
-            githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/content/docs/${path}`}
+            githubUrl={`https://github.com/${sourceGitConfig.user}/${sourceGitConfig.repo}/blob/${sourceGitConfig.branch}/apps/web/content/docs/${path}`}
           />
         </div>
         <DocsBody>
