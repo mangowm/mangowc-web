@@ -81,6 +81,6 @@ export const SITE_DESCRIPTION =
 export const baseUrl =
 	process.env.NODE_ENV === "development"
 		? new URL("http://localhost:3001")
-		: new URL("https://atheeq-rhxn.github.io" + basePath);
+		: new URL("https://mangowm.github.io" + basePath);
 
-export const githubPagesBasePath = "/mangowc-web";
+export const githubPagesBasePath = "/mango-web";

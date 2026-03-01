@@ -1,8 +1,8 @@
-# <img src="apps/web/public/favicon/favicon.svg" width="24" height="24" alt="Mango Logo" style="vertical-align: middle;"> MangoWC Web
+# <img src="apps/web/public/favicon/favicon.svg" width="24" height="24" alt="mango Logo" style="vertical-align: middle;"> mango website
 
 # GITHUB
 
-**MangoWC Web** is the website for **[MangoWC](https://github.com/DreamMaoMao/mangowc)** — a lightweight, high-performance Wayland compositor built on **dwl**.
+This is the website for **[mango](https://github.com/mangowm/mango)** — a lightweight, high-performance Wayland compositor built on **dwl**.
 This site provides detailed documentation, configuration guides, and developer resources for both users and contributors.
 
 ---
@@ -14,8 +14,8 @@ This site provides detailed documentation, configuration guides, and developer r
 ### 1. Clone the repository
 
 ```bash
-git clone git@github.com:atheeq-rhxn/mangowc-web.git
-cd mangowc-web
+git clone https://github.com/mangowm/mango-web.git
+cd mango-web
 ```
 
 ### 2. Install dependencies
@@ -52,7 +52,7 @@ Once running, open [http://localhost:3001](http://localhost:3001) in your browse
 ## 🏗️ Project Structure
 
 ```
-mangowc-web/
+mango-web/
 ├── docs/                     # Markdown/MDX documentation content
 ├── apps/
 │   └── web/                  # Main Next.js application
@@ -68,6 +68,7 @@ mangowc-web/
 
 ## 🌐 Links
 
-* **Core Project:** [DreamMaoMao/mangowc](https://github.com/DreamMaoMao/mangowc)
-* **Project Wiki:** [DreamMaoMao/mangowc](https://github.com/DreamMaoMao/mangowc/wiki)
-* **Live Site:** [https://mangowc.vercel.app](https://mangowc.vercel.app)
+* **Core Project:** [mangowm/mango](https://github.com/mangowm/mango)
+* **Project Wiki:** [mangowm/mango](https://github.com/mangowm/mango/wiki)
+* **Live Site (Vercel):** [https://mangowc.vercel.app](https://mangowc.vercel.app)
+* **Live Site (GitHub Pages):** [https://mangowm.github.io/website/](https://mangowm.github.io/mango-web/)
