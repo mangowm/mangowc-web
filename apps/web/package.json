@@ -19,7 +19,7 @@
     "@tanstack/start-static-server-functions": "1.163.2",
     "fumadocs-core": "16.6.7",
     "fumadocs-mdx": "14.2.8",
-    "fumadocs-ui": "16.6.7",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@16.6.7",
     "lucide-react": "^0.575.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
