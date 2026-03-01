@@ -34,11 +34,11 @@ export interface MonitorConfig {
 }
 
 export const MONITOR_PRESETS: Record<string, MonitorConfig> = {
-  "1920x1080": { width: 1920, height: 1080, scale: 1, refreshRate: 60, isPortrait: false },
-  "2560x1440": { width: 2560, height: 1440, scale: 1, refreshRate: 60, isPortrait: false },
-  "3840x2160": { width: 3840, height: 2160, scale: 2, refreshRate: 60, isPortrait: false },
-  "1440x2560": { width: 1440, height: 2560, scale: 1, refreshRate: 60, isPortrait: true },
-  "1080x1920": { width: 1080, height: 1920, scale: 1, refreshRate: 60, isPortrait: true },
+  "1920x1080":  { width: 1920, height: 1080, scale: 1,    refreshRate: 60, isPortrait: false },
+  "2560x1440":  { width: 2560, height: 1440, scale: 1,    refreshRate: 60, isPortrait: false },
+  "3840x2160":  { width: 3840, height: 2160, scale: 2,    refreshRate: 60, isPortrait: false },
+  "1440x2560":  { width: 1440, height: 2560, scale: 1,    refreshRate: 60, isPortrait: true  },
+  "1080x1920":  { width: 1080, height: 1920, scale: 1,    refreshRate: 60, isPortrait: true  },
 };
 
 export const DEFAULT_MONITOR_CONFIG: MonitorConfig = {
