@@ -1,31 +1,82 @@
 ---
-title: Hello World
-description: Your favourite docs framework.
-icon: Rocket
+title: Introduction
+description: A lightweight and feature-rich Wayland compositor based on dwl.
 ---
 
-Hey there! Fumadocs is the docs framework that also works on Tanstack Start!
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Layers, Zap, LayoutTemplate, Keyboard, MessageCircle } from 'lucide-react';
 
-## Heading
+# MangoWC
 
-Hello World!
+**MangoWC** is a Wayland compositor development based on [dwl](https://codeberg.org/dwl/dwl/). It aims to be as lightweight as `dwl` and can be built completely within a few seconds, without compromising on functionality.
+
+<Callout type="info" title="Philosophy">
+  **Lightweight & Fast Build**: _Mango_ is designed to be minimal yet functional. It compiles in seconds and offers a robust set of features out of the box.
+</Callout>
+
+## Feature Highlights
+
+Beyond basic window management, Mango provides a rich set of features designed for a modern Wayland experience.
 
 <Cards>
-  <Card title="Learn more about Tanstack Start" href="https://tanstack.com/start" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
+  <Card
+    icon={<Zap />}
+    href="/docs/visuals/animations"
+    title="Fluid Animations"
+    description="Smooth, customizable animations for opening, moving, and closing windows, as well as tag switching."
+  />
+  <Card
+    icon={<LayoutTemplate />}
+    href="/docs/window-management/layouts"
+    title="Flexible Layouts"
+    description="Supports Scroller, Master-Stack, Monocle, Grid, Deck, and more, with per-tag layouts."
+  />
+  <Card
+    icon={<Layers />}
+    href="/docs/visuals/effects"
+    title="Visual Effects"
+    description="Built-in blur, shadows, corner radius, and opacity effects powered by scenefx."
+  />
+  <Card
+    icon={<Keyboard />}
+    href="/docs/ipc"
+    title="IPC & Scripting"
+    description="Control the compositor externally with robust IPC support for custom scripts and widgets."
+  />
 </Cards>
 
-### CodeBlock
+## Additional Features
 
-```ts
-console.log("Hello World");
-```
+- **XWayland Support**: Excellent compatibility for legacy X11 applications.
+- **Tag System**: Uses tags instead of workspaces, allowing separate window layouts for each tag.
+- **Input Methods**: Great support for text input v2/v3 (Fcitx5, IBus).
+- **Window States**: Rich states including swallow, minimize, maximize, fullscreen, and overlay.
+- **Hot-Reload Config**: Simple external configuration that supports hot-reloading without restarting.
+- **Scratchpads**: Support for both Sway-like and named scratchpads.
 
-#### Table
+## Community
 
-| Head                            | Description                         |
-| ------------------------------- | ----------------------------------- |
-| `hello`                         | Hello World                         |
-| very **important**              | Hey                                 |
-| _Surprisingly_                  | Fumadocs                            |
-| very long text that looks weird | hello world hello world hello world |
+<Cards>
+  <Card
+    href="https://discord.gg/CPjbDxesh5"
+    title="Join the MangoWC Discord"
+    description="Chat with the community, get support, share your setup, and stay updated with the latest MangoWC news."
+  />
+
+  <Card
+    href="https://github.com/mangowm/mango/discussions"
+    title="Join the GitHub Discussions"
+    description="Ask questions, request features, report issues, or share ideas directly with contributors and other users."
+  />
+</Cards>
+
+## Acknowledgements
+
+This project is built upon the hard work of several open-source projects:
+
+- **[wlroots](https://gitlab.freedesktop.org/wlroots/wlroots)**: Implementation of the Wayland protocols.
+- **[dwl](https://codeberg.org/dwl/dwl)**: The base for Mango's core functionality.
+- **[mwl](https://github.com/nikoloc/mwl)**: Inspiration for basal window animations.
+- **[scenefx](https://github.com/wlrfx/scenefx)**: The library powering Mango's window effects.
+
