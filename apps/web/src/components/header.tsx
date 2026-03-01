@@ -5,7 +5,6 @@ import { Search } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { basePath } from "@/lib/base-path";
 import { ModeToggle } from "./mode-toggle";
 import { SponsorButton } from "./sponsor-button";
 
@@ -59,7 +58,7 @@ export function Header() {
 				<div className="flex items-center gap-8">
 					<Link href="/" className="group flex items-center gap-2">
 						<Image
-							src={`${basePath}/logo-32x32.webp`}
+							src="/logo-32x32.webp"
 							alt="MangoWC Logo"
 							width={32}
 							height={32}

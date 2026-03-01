@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { basePath } from "@/lib/base-path";
 
 export function Footer() {
 	return (
@@ -10,7 +9,7 @@ export function Footer() {
 					<div>
 						<div className="mb-4 flex items-center gap-2">
 							<Image
-								src={`${basePath}/logo-32x32.webp`}
+								src="/logo-32x32.webp"
 								alt="MangoWC Logo"
 								width={32}
 								height={32}

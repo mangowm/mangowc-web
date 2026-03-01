@@ -1,5 +1,4 @@
 import type { Metadata } from "next/types";
-import { basePath } from "./base-path";
 import type { Page } from "./source";
 
 const IMAGE_VERSION = "4";
@@ -19,8 +18,8 @@ export function createMetadata(override: Metadata): Metadata {
 			"dynamic tiling",
 		],
 		icons: {
-			icon: `${basePath}/favicon.ico`,
-			apple: `${basePath}/logo-192x192.webp`,
+			icon: "/favicon.ico",
+			apple: "/logo-192x192.webp",
 		},
 		robots: {
 			index: true,

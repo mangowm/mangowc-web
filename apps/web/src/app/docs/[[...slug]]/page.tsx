@@ -9,7 +9,6 @@ import {
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LLMCopyButton, ViewOptions } from "@/components/page-actions";
-import { basePath } from "@/lib/base-path";
 import {
 	baseUrl,
 	createMetadata,
@@ -71,10 +70,10 @@ export default async function DocPage(props: PageProps<"/docs/[[...slug]]">) {
 				</DocsDescription>
 				<div className="flex flex-row flex-wrap items-center gap-2 border-b pb-8">
 					<LLMCopyButton
-						markdownUrl={`${basePath}/llms.mdx/docs/${[...page.slugs, "index.mdx"].join("/")}`}
+						markdownUrl={`/llms.mdx/docs/${[...page.slugs, "index.mdx"].join("/")}`}
 					/>
 					<ViewOptions
-						markdownUrl={`${basePath}/llms.mdx/docs/${[...page.slugs, "index.mdx"].join("/")}`}
+						markdownUrl={`/llms.mdx/docs/${[...page.slugs, "index.mdx"].join("/")}`}
 						githubUrl={`https://github.com/mangowm/mango-web/blob/main/apps/web/content/docs/${page.path}`}
 					/>
 				</div>
