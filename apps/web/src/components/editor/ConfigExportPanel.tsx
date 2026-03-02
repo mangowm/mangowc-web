@@ -3,102 +3,59 @@
 import { useMemo, useState, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import type { LayoutParams, MonitorParams } from "./types";
+
+// ---------------------------------------------------------------------------
+// Config generation
+// ---------------------------------------------------------------------------
 
 function boolToInt(v: boolean): string {
   return v ? "1" : "0";
 }
 
-function generateConfig(params: {
-  smartGaps: boolean;
-  gapOuterH: number;
-  gapOuterV: number;
-  gapInnerH: number;
-  gapInnerV: number;
-  masterCount: number;
-  masterFactor: number;
-  centerMasterOverspread: boolean;
-  centerWhenSingleStack: boolean;
-  scrollerStructs: number;
-  scrollerDefaultProportion: number;
-  scrollerDefaultProportionSingle: number;
-  scrollerIgnoreSingle: boolean;
-  scrollerFocusCenter: boolean;
-  scrollerPreferCenter: boolean;
-  scrollerPreferOverspread: boolean;
-  overviewGapInner: number;
-  overviewGapOuter: number;
-}, monitor: {
-  width: number;
-  height: number;
-  scale: number;
-}): string {
-  const lines: string[] = [];
-
-  lines.push("# Monitor");
-  lines.push(`monitorrule=name:DP-1,width:${monitor.width},height:${monitor.height},scale:${monitor.scale},refresh:60,x:0,y:0,vrr:0,rr:0`);
-
-  lines.push("");
-  lines.push("# Gaps");
-  lines.push(`smartgaps = ${boolToInt(params.smartGaps)}`);
-  lines.push(`gappih = ${params.gapInnerH}`);
-  lines.push(`gappiv = ${params.gapInnerV}`);
-  lines.push(`gappoh = ${params.gapOuterH}`);
-  lines.push(`gappov = ${params.gapOuterV}`);
-
-  lines.push("");
-  lines.push("# Master");
-  lines.push(`default_nmaster = ${params.masterCount}`);
-  lines.push(`default_mfact = ${params.masterFactor.toFixed(2)}`);
-
-  lines.push("");
-  lines.push("# Center Tile");
-  lines.push(`center_master_overspread = ${boolToInt(params.centerMasterOverspread)}`);
-  lines.push(`center_when_single_stack = ${boolToInt(params.centerWhenSingleStack)}`);
-
-  lines.push("");
-  lines.push("# Scroller");
-  lines.push(`scroller_structs = ${params.scrollerStructs}`);
-  lines.push(`scroller_default_proportion = ${params.scrollerDefaultProportion.toFixed(2)}`);
-  lines.push(`scroller_default_proportion_single = ${params.scrollerDefaultProportionSingle.toFixed(2)}`);
-  lines.push(`scroller_ignore_proportion_single = ${boolToInt(params.scrollerIgnoreSingle)}`);
-  lines.push(`scroller_focus_center = ${boolToInt(params.scrollerFocusCenter)}`);
-  lines.push(`scroller_prefer_center = ${boolToInt(params.scrollerPreferCenter)}`);
-  lines.push(`scroller_prefer_overspread = ${boolToInt(params.scrollerPreferOverspread)}`);
-
-  lines.push("");
-  lines.push("# Overview");
-  lines.push(`overviewgappi = ${params.overviewGapInner}`);
-  lines.push(`overviewgappo = ${params.overviewGapOuter}`);
+function generateConfig(params: LayoutParams, _monitor: MonitorParams): string {
+  const lines: string[] = [
+    "# Gaps",
+    `smartgaps = ${boolToInt(params.smartGaps)}`,
+    `gappih = ${params.gapInnerH}`,
+    `gappiv = ${params.gapInnerV}`,
+    `gappoh = ${params.gapOuterH}`,
+    `gappov = ${params.gapOuterV}`,
+    "",
+    "# Master",
+    `default_nmaster = ${params.masterCount}`,
+    `default_mfact = ${params.masterFactor.toFixed(2)}`,
+    `new_is_master = ${boolToInt(params.newIsMaster)}`,
+    "",
+    "# Center Tile",
+    `center_master_overspread = ${boolToInt(params.centerMasterOverspread)}`,
+    `center_when_single_stack = ${boolToInt(params.centerWhenSingleStack)}`,
+    "",
+    "# Scroller",
+    `scroller_structs = ${params.scrollerStructs}`,
+    `scroller_default_proportion = ${params.scrollerDefaultProportion.toFixed(2)}`,
+    `scroller_default_proportion_single = ${params.scrollerDefaultProportionSingle.toFixed(2)}`,
+    `scroller_ignore_proportion_single = ${boolToInt(params.scrollerIgnoreSingle)}`,
+    `scroller_focus_center = ${boolToInt(params.scrollerFocusCenter)}`,
+    `scroller_prefer_center = ${boolToInt(params.scrollerPreferCenter)}`,
+    `scroller_prefer_overspread = ${boolToInt(params.scrollerPreferOverspread)}`,
+    `edge_scroller_pointer_focus = ${boolToInt(params.scrollerEdgePointerFocus)}`,
+    "",
+    "# Overview",
+    `overviewgappi = ${params.overviewGapInner}`,
+    `overviewgappo = ${params.overviewGapOuter}`,
+  ];
 
   return lines.join("\n");
 }
 
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 interface ConfigExportPanelProps {
-  params: {
-    smartGaps: boolean;
-    gapOuterH: number;
-    gapOuterV: number;
-    gapInnerH: number;
-    gapInnerV: number;
-    masterCount: number;
-    masterFactor: number;
-    centerMasterOverspread: boolean;
-    centerWhenSingleStack: boolean;
-    scrollerStructs: number;
-    scrollerDefaultProportion: number;
-    scrollerDefaultProportionSingle: number;
-    scrollerIgnoreSingle: boolean;
-    scrollerFocusCenter: boolean;
-    scrollerPreferCenter: boolean;
-    scrollerPreferOverspread: boolean;
-    overviewGapInner: number;
-    overviewGapOuter: number;
-  };
-  monitor: {
-    width: number;
-    height: number;
-    scale: number;
-  };
+  params: LayoutParams;
+  monitor: MonitorParams;
 }
 
 export function ConfigExportPanel({ params, monitor }: ConfigExportPanelProps) {
@@ -130,8 +87,7 @@ export function ConfigExportPanel({ params, monitor }: ConfigExportPanelProps) {
 
       <div className="border-t p-3">
         <Button
-          size="sm"
-          variant="outline"
+          size="sm" variant="outline"
           className="w-full text-sm"
           onClick={handleCopy}
         >

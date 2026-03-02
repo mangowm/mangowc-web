@@ -1,13 +1,22 @@
 import type { WindowRect, ContainerDims } from "./types";
 import { GAP_INNER, GAP_OUTER } from "./types";
 
+// ---------------------------------------------------------------------------
+// Shared config interfaces
+// ---------------------------------------------------------------------------
+
 export interface LayoutGapParams {
-  enableGaps: boolean;
   smartGaps: boolean;
   gapOuterH: number;
   gapOuterV: number;
   gapInnerH: number;
   gapInnerV: number;
+}
+
+export interface MasterConfig {
+  masterCount: number;
+  masterFactor: number;
+  newIsMaster: boolean;
 }
 
 export interface ScrollerConfig {
@@ -18,6 +27,7 @@ export interface ScrollerConfig {
   scrollerFocusCenter: boolean;
   scrollerPreferCenter: boolean;
   scrollerPreferOverspread: boolean;
+  scrollerEdgePointerFocus: boolean;
 }
 
 export interface CenterTileConfig {
@@ -26,8 +36,7 @@ export interface CenterTileConfig {
 }
 
 const DEFAULT_GAP_PARAMS: LayoutGapParams = {
-  enableGaps: true,
-  smartGaps: true,
+  smartGaps: false,
   gapOuterH: GAP_OUTER,
   gapOuterV: GAP_OUTER,
   gapInnerH: GAP_INNER,
@@ -35,11 +44,11 @@ const DEFAULT_GAP_PARAMS: LayoutGapParams = {
 };
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Internal helpers
 // ---------------------------------------------------------------------------
 
 function getGaps(windowCount: number, params: LayoutGapParams = DEFAULT_GAP_PARAMS) {
-  if (!params.enableGaps || (params.smartGaps && windowCount === 1)) {
+  if (params.smartGaps && windowCount === 1) {
     return { gappoh: 0, gappov: 0, gappih: 0, gappiv: 0 };
   }
   return {
@@ -50,20 +59,110 @@ function getGaps(windowCount: number, params: LayoutGapParams = DEFAULT_GAP_PARA
   };
 }
 
-/** Returns 1 when gaps are enabled, 0 otherwise — used as a gap multiplier. */
-function gapEnabled(params: LayoutGapParams): 0 | 1 {
-  return params.enableGaps ? 1 : 0;
+/** Always returns 1 since gaps are always applied (only smartgaps can reduce them to 0). */
+function gapEnabled(_params: LayoutGapParams): 0 | 1 {
+  return 1;
 }
 
-/**
- * Calculates the grid column/row count for `n` items.
- * Returns { cols, rows } such that cols >= rows and cols * rows >= n.
- */
+/** Calculates grid dimensions for `n` items so that cols >= rows and cols * rows >= n. */
 function gridDimensions(n: number): { cols: number; rows: number } {
   let cols = 0;
   while (cols * cols < n) cols++;
   const rows = cols && (cols - 1) * cols >= n ? cols - 1 : cols;
   return { cols, rows };
+}
+
+// ---------------------------------------------------------------------------
+// Core tile helper — shared by horizontal and vertical variants
+// ---------------------------------------------------------------------------
+
+/**
+ * Computes a master-stack tiling in a normalised space where the "main" axis
+ * is always horizontal. The caller is responsible for swapping x/y and w/h
+ * before returning when building a vertical variant.
+ *
+ * Returns rects in the normalised (horizontal) space.
+ */
+function computeTileRects(
+  mainSize: number,   // container width  (or height for vertical)
+  crossSize: number,  // container height (or width  for vertical)
+  windowCount: number,
+  masterCount: number,
+  masterFactor: number,
+  gapOuter: number,   // gappoh (or gappov for vertical)
+  gapOuterC: number,  // gappov (or gappoh for vertical)
+  gapInner: number,   // gappih (or gappiv for vertical)
+  gapInnerC: number,  // gappiv (or gappih for vertical)
+  ie: 0 | 1,
+  masterInnerPers: number[],
+  stackInnerPers: number[],
+  newIsMaster: boolean,
+): Array<{ main: number; cross: number; mainSize: number; crossSize: number }> {
+  const n = windowCount;
+  const nmasters = Math.min(masterCount, n);
+  const stackCount = n - nmasters;
+
+  const masterMain =
+    n > nmasters
+      ? nmasters ? Math.round((mainSize + gapInner * ie) * masterFactor) : 0
+      : mainSize - 2 * gapOuter + gapInner * ie;
+
+  const results: Array<{ main: number; cross: number; mainSize: number; crossSize: number }> = [];
+  let my = gapOuterC;
+  let ty = gapOuterC;
+  let masterSurplusH = crossSize - 2 * gapOuterC - gapInnerC * ie * (nmasters - 1);
+  let slaveSurplusH  = crossSize - 2 * gapOuterC - gapInnerC * ie * (stackCount - 1);
+  let masterSurplusR = 1.0;
+  let slaveSurplusR  = 1.0;
+
+  // Master is ALWAYS on left, stack ALWAYS on right
+  // newIsMaster controls which window numbers are masters:
+  // - true: window 0..nmasters-1 are masters (W1, W2, ...)
+  // - false: window stackCount..n-1 are masters (W{n-nmasters+1}, ...)
+
+  for (let i = 0; i < n; i++) {
+    let isMaster: boolean;
+    let masterIdx: number;
+    let stackIdx: number;
+
+    if (newIsMaster) {
+      isMaster = i < nmasters;
+      masterIdx = i;
+      stackIdx = i - nmasters;
+    } else {
+      isMaster = i >= stackCount;
+      masterIdx = i - stackCount;
+      stackIdx = i;
+    }
+
+    if (isMaster) {
+      const r = nmasters - masterIdx;
+      let h: number;
+      if (masterInnerPers[masterIdx] > 0) {
+        h = masterSurplusH * masterInnerPers[masterIdx] / masterSurplusR;
+        masterSurplusH -= h;
+        masterSurplusR -= masterInnerPers[masterIdx];
+      } else {
+        h = Math.round((crossSize - my - gapOuterC - gapInnerC * ie * (r - 1)) / r);
+      }
+      results.push({ main: gapOuter, cross: my, mainSize: masterMain - gapInner * ie, crossSize: h });
+      my += h + gapInnerC * ie;
+    } else {
+      const r = stackCount - stackIdx;
+      let h: number;
+      if (stackIdx >= 0 && stackIdx < stackInnerPers.length && stackInnerPers[stackIdx] > 0) {
+        h = slaveSurplusH * stackInnerPers[stackIdx] / slaveSurplusR;
+        slaveSurplusH -= h;
+        slaveSurplusR -= stackInnerPers[stackIdx];
+      } else {
+        h = Math.round((crossSize - ty - gapOuterC - gapInnerC * ie * (r - 1)) / r);
+      }
+      results.push({ main: masterMain + gapOuter, cross: ty, mainSize: mainSize - masterMain - 2 * gapOuter, crossSize: h });
+      ty += h + gapInnerC * ie;
+    }
+  }
+
+  return results;
 }
 
 // ---------------------------------------------------------------------------
@@ -78,58 +177,15 @@ export function calculateTileLayout(
   gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
   masterInnerPers: number[] = [],
   stackInnerPers: number[] = [],
+  newIsMaster = true,
 ): WindowRect[] {
   if (windowCount === 0) return [];
-
   const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const ie = gapEnabled(gapParams);
-  const n = windowCount;
-  const nmasters = Math.min(masterCount, n);
-  const stackCount = n - nmasters;
-
-  const mw =
-    n > nmasters
-      ? nmasters ? Math.round((container.width + gappih * ie) * masterFactor) : 0
-      : container.width - 2 * gappoh + gappih * ie;
-
-  const rects: WindowRect[] = [];
-  let my = gappov;
-  let ty = gappov;
-  let masterSurplusHeight = container.height - 2 * gappov - gappiv * ie * (nmasters - 1);
-  let slaveSurplusHeight  = container.height - 2 * gappov - gappiv * ie * (stackCount - 1);
-  let masterSurplusRatio = 1.0;
-  let slaveSurplusRatio  = 1.0;
-
-  for (let i = 0; i < n; i++) {
-    if (i < nmasters) {
-      const r = nmasters - i;
-      let h: number;
-      if (masterInnerPers[i] > 0) {
-        h = masterSurplusHeight * masterInnerPers[i] / masterSurplusRatio;
-        masterSurplusHeight -= h;
-        masterSurplusRatio -= masterInnerPers[i];
-      } else {
-        h = Math.round((container.height - my - gappov - gappiv * ie * (r - 1)) / r);
-      }
-      rects.push({ x: gappoh, y: my, width: mw - gappih * ie, height: h });
-      my += h + gappiv * ie;
-    } else {
-      const stackIdx = i - nmasters;
-      const r = n - i;
-      let h: number;
-      if (stackInnerPers[stackIdx] > 0) {
-        h = slaveSurplusHeight * stackInnerPers[stackIdx] / slaveSurplusRatio;
-        slaveSurplusHeight -= h;
-        slaveSurplusRatio -= stackInnerPers[stackIdx];
-      } else {
-        h = Math.round((container.height - ty - gappov - gappiv * ie * (r - 1)) / r);
-      }
-      rects.push({ x: mw + gappoh, y: ty, width: container.width - mw - 2 * gappoh, height: h });
-      ty += h + gappiv * ie;
-    }
-  }
-
-  return rects;
+  return computeTileRects(
+    container.width, container.height, windowCount, masterCount, masterFactor,
+    gappoh, gappov, gappih, gappiv, ie, masterInnerPers, stackInnerPers, newIsMaster,
+  ).map(({ main: x, cross: y, mainSize: width, crossSize: height }) => ({ x, y, width, height }));
 }
 
 export function calculateVerticalTileLayout(
@@ -140,11 +196,12 @@ export function calculateVerticalTileLayout(
   gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
   masterInnerPers: number[] = [],
   stackInnerPers: number[] = [],
+  newIsMaster = true,
 ): WindowRect[] {
   if (windowCount === 0) return [];
-
   const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const ie = gapEnabled(gapParams);
+
   const n = windowCount;
   const nmasters = Math.min(masterCount, n);
   const stackCount = n - nmasters;
@@ -162,24 +219,38 @@ export function calculateVerticalTileLayout(
   let masterSurplusRatio = 1.0;
   let slaveSurplusRatio  = 1.0;
 
+  // Master is ALWAYS on top, stack ALWAYS on bottom
   for (let i = 0; i < n; i++) {
-    if (i < nmasters) {
-      const r = nmasters - i;
+    let isMaster: boolean;
+    let masterIdx: number;
+    let stackIdx: number;
+
+    if (newIsMaster) {
+      isMaster = i < nmasters;
+      masterIdx = i;
+      stackIdx = i - nmasters;
+    } else {
+      isMaster = i >= stackCount;
+      masterIdx = i - stackCount;
+      stackIdx = i;
+    }
+
+    if (isMaster) {
+      const r = nmasters - masterIdx;
       let w: number;
-      if (masterInnerPers[i] > 0) {
-        w = masterSurplusWidth * masterInnerPers[i] / masterSurplusRatio;
+      if (masterInnerPers[masterIdx] > 0) {
+        w = masterSurplusWidth * masterInnerPers[masterIdx] / masterSurplusRatio;
         masterSurplusWidth -= w;
-        masterSurplusRatio -= masterInnerPers[i];
+        masterSurplusRatio -= masterInnerPers[masterIdx];
       } else {
         w = Math.round((container.width - mx - gappih - gappih * ie * (r - 1)) / r);
       }
       rects.push({ x: mx, y: gappov, width: w, height: mh - gappiv * ie });
       mx += w + gappih * ie;
     } else {
-      const stackIdx = i - nmasters;
-      const r = n - i;
+      const r = stackCount - stackIdx;
       let w: number;
-      if (stackInnerPers[stackIdx] > 0) {
+      if (stackIdx >= 0 && stackIdx < stackInnerPers.length && stackInnerPers[stackIdx] > 0) {
         w = slaveSurplusWidth * stackInnerPers[stackIdx] / slaveSurplusRatio;
         slaveSurplusWidth -= w;
         slaveSurplusRatio -= stackInnerPers[stackIdx];
@@ -194,25 +265,31 @@ export function calculateVerticalTileLayout(
   return rects;
 }
 
+// ---------------------------------------------------------------------------
+// Grid
+// ---------------------------------------------------------------------------
+
+/** Shared single-window and two-window special-cases for grid layouts. */
+function gridSingleRect(container: ContainerDims, gappoh: number, gappov: number): WindowRect {
+  const cw = (container.width  - 2 * gappoh) * 0.9;
+  const ch = (container.height - 2 * gappov) * 0.9;
+  return {
+    x: gappoh + (container.width  - 2 * gappoh - cw) / 2,
+    y: gappov + (container.height - 2 * gappov - ch) / 2,
+    width: cw, height: ch,
+  };
+}
+
 export function calculateGridLayout(
   container: ContainerDims,
   windowCount: number,
   gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
 ): WindowRect[] {
   if (windowCount === 0) return [];
-
   const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const n = windowCount;
 
-  if (n === 1) {
-    const cw = (container.width  - 2 * gappoh) * 0.9;
-    const ch = (container.height - 2 * gappov) * 0.9;
-    return [{
-      x: gappoh + (container.width  - 2 * gappoh - cw) / 2,
-      y: gappov + (container.height - 2 * gappov - ch) / 2,
-      width: cw, height: ch,
-    }];
-  }
+  if (n === 1) return [gridSingleRect(container, gappoh, gappov)];
 
   if (n === 2) {
     const cw = Math.round((container.width - 2 * gappoh - gappih) / 2);
@@ -236,12 +313,7 @@ export function calculateGridLayout(
     const col = i % cols;
     const row = Math.floor(i / cols);
     const cx  = col * (cellWidth + gappih) + (overcols && i >= n - overcols ? dx : 0);
-    return {
-      x: gappoh + cx,
-      y: gappov + row * (cellHeight + gappiv),
-      width:  Math.round(cellWidth),
-      height: Math.round(cellHeight),
-    };
+    return { x: gappoh + cx, y: gappov + row * (cellHeight + gappiv), width: Math.round(cellWidth), height: Math.round(cellHeight) };
   });
 }
 
@@ -251,26 +323,17 @@ export function calculateVerticalGridLayout(
   gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
 ): WindowRect[] {
   if (windowCount === 0) return [];
-
   const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const n = windowCount;
 
-  if (n === 1) {
-    const cw = (container.width  - 2 * gappoh) * 0.9;
-    const ch = (container.height - 2 * gappov) * 0.9;
-    return [{
-      x: gappoh + (container.width  - 2 * gappoh - cw) / 2,
-      y: gappov + (container.height - 2 * gappov - ch) / 2,
-      width: cw, height: ch,
-    }];
-  }
+  if (n === 1) return [gridSingleRect(container, gappoh, gappov)];
 
   if (n === 2) {
     const cw = Math.round((container.width - 2 * gappoh) * 0.65);
     const ch = Math.round((container.height - 2 * gappov - gappiv) / 2);
     const cx = gappoh + (container.width - 2 * gappoh - cw) / 2;
     return [
-      { x: cx, y: gappov,              width: cw, height: ch },
+      { x: cx, y: gappov,               width: cw, height: ch },
       { x: cx, y: gappov + ch + gappiv, width: cw, height: ch },
     ];
   }
@@ -288,21 +351,16 @@ export function calculateVerticalGridLayout(
     const col = Math.floor(i / rows);
     const row = i % rows;
     const cy  = row * (cellHeight + gappiv) + (overrows && i >= n - overrows ? dy : 0);
-    return {
-      x: gappoh + col * (cellWidth + gappih),
-      y: gappov + cy,
-      width:  Math.round(cellWidth),
-      height: Math.round(cellHeight),
-    };
+    return { x: gappoh + col * (cellWidth + gappih), y: gappov + cy, width: Math.round(cellWidth), height: Math.round(cellHeight) };
   });
 }
 
-export function calculateMonocleLayout(
-  container: ContainerDims,
-  windowCount: number,
-): WindowRect[] {
-  if (windowCount === 0) return [];
+// ---------------------------------------------------------------------------
+// Monocle
+// ---------------------------------------------------------------------------
 
+export function calculateMonocleLayout(container: ContainerDims, windowCount: number): WindowRect[] {
+  if (windowCount === 0) return [];
   const { gappoh, gappov } = getGaps(windowCount);
   const rect: WindowRect = {
     x: gappoh,
@@ -310,87 +368,92 @@ export function calculateMonocleLayout(
     width:  container.width  - 2 * gappoh,
     height: container.height - 2 * gappov,
   };
-
   return Array<WindowRect>(windowCount).fill(rect);
 }
 
-export function calculateDeckLayout(
+// ---------------------------------------------------------------------------
+// Deck  (shared helper for horizontal + vertical)
+// ---------------------------------------------------------------------------
+
+function computeDeckRects(
   container: ContainerDims,
   windowCount: number,
-  masterCount = 1,
-  masterFactor = 0.7,
-  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
+  masterCount: number,
+  masterFactor: number,
+  gapParams: LayoutGapParams,
+  vertical: boolean,
+  newIsMaster: boolean = true,
 ): WindowRect[] {
   if (windowCount === 0) return [];
 
-  const { gappoh, gappov, gappih } = getGaps(windowCount, gapParams);
+  const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const n = windowCount;
   const nmasters = Math.min(masterCount, n);
   const stackCount = n - nmasters;
 
-  const mw =
-    n > nmasters
-      ? nmasters ? Math.round((container.width - 2 * gappoh) * masterFactor) : 0
-      : container.width - 2 * gappoh;
+  // Determine master indices based on newIsMaster
+  const masterStartIdx = newIsMaster ? 0 : stackCount;
 
-  const rects: WindowRect[] = [];
-  let my = 0;
-
-  for (let i = 0; i < nmasters; i++) {
-    const h = (container.height - 2 * gappov - my) / (nmasters - i);
-    rects.push({ x: gappoh, y: gappov + my, width: mw, height: Math.round(h) });
-    my += h;
-  }
-
-  const stackRect: WindowRect = {
-    x: mw + gappoh + gappih,
-    y: gappov,
-    width:  container.width  - mw - 2 * gappoh - gappih,
-    height: container.height - 2 * gappov,
-  };
-  for (let i = 0; i < stackCount; i++) rects.push(stackRect);
-
-  return rects;
-}
-
-export function calculateVerticalDeckLayout(
-  container: ContainerDims,
-  windowCount: number,
-  masterCount = 1,
-  masterFactor = 0.7,
-  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
-): WindowRect[] {
-  if (windowCount === 0) return [];
-
-  const { gappoh, gappov, gappiv } = getGaps(windowCount, gapParams);
-  const n = windowCount;
-  const nmasters = Math.min(masterCount, n);
-  const stackCount = n - nmasters;
-
-  const mh =
-    n > nmasters
+  if (vertical) {
+    const mh = n > nmasters
       ? nmasters ? Math.round((container.height - 2 * gappov) * masterFactor) : 0
       : container.height - 2 * gappov;
 
-  const rects: WindowRect[] = [];
-  let mx = 0;
-
-  for (let i = 0; i < nmasters; i++) {
-    const w = (container.width - 2 * gappoh - mx) / (nmasters - i);
-    rects.push({ x: gappoh + mx, y: gappov, width: Math.round(w), height: mh });
-    mx += w;
+    const rects: WindowRect[] = [];
+    // Push rects in window order (not master then stack)
+    for (let i = 0; i < n; i++) {
+      const isMaster = i >= masterStartIdx && i < masterStartIdx + nmasters;
+      if (isMaster) {
+        const masterIdx = i - masterStartIdx;
+        const w = (container.width - 2 * gappoh - (masterIdx > 0 ? masterIdx * (container.width - 2 * gappoh) / nmasters : 0)) / (nmasters - masterIdx);
+        rects.push({ x: gappoh, y: gappov, width: Math.round(w), height: mh });
+      } else {
+        const stackIdx = newIsMaster ? i - nmasters : i;
+        const stackX = gappoh + nmasters * ((container.width - 2 * gappoh) / nmasters);
+        rects.push({ x: stackX, y: mh + gappov + gappiv, width: container.width - 2 * gappoh, height: container.height - mh - 2 * gappov - gappiv });
+      }
+    }
+    return rects;
   }
 
-  const stackRect: WindowRect = {
-    x: gappoh,
-    y: mh + gappov + gappiv,
-    width:  container.width  - 2 * gappoh,
-    height: container.height - mh - 2 * gappov - gappiv,
-  };
-  for (let i = 0; i < stackCount; i++) rects.push(stackRect);
+  const mw = n > nmasters
+    ? nmasters ? Math.round((container.width - 2 * gappoh) * masterFactor) : 0
+    : container.width - 2 * gappoh;
 
+  const rects: WindowRect[] = [];
+  // Push rects in window order (not master then stack)
+  for (let i = 0; i < n; i++) {
+    const isMaster = i >= masterStartIdx && i < masterStartIdx + nmasters;
+    if (isMaster) {
+      const masterIdx = i - masterStartIdx;
+      const h = (container.height - 2 * gappov - (masterIdx > 0 ? masterIdx * (container.height - 2 * gappov) / nmasters : 0)) / (nmasters - masterIdx);
+      rects.push({ x: gappoh, y: gappov, width: mw, height: Math.round(h) });
+    } else {
+      const stackIdx = newIsMaster ? i - nmasters : i;
+      const stackY = nmasters * ((container.height - 2 * gappov) / nmasters);
+      rects.push({ x: mw + gappoh + gappih, y: gappov, width: container.width - mw - 2 * gappoh - gappih, height: container.height - 2 * gappov });
+    }
+  }
   return rects;
 }
+
+export function calculateDeckLayout(
+  container: ContainerDims, windowCount: number, masterCount = 1, masterFactor = 0.7,
+  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS, newIsMaster = true,
+): WindowRect[] {
+  return computeDeckRects(container, windowCount, masterCount, masterFactor, gapParams, false, newIsMaster);
+}
+
+export function calculateVerticalDeckLayout(
+  container: ContainerDims, windowCount: number, masterCount = 1, masterFactor = 0.7,
+  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS, newIsMaster = true,
+): WindowRect[] {
+  return computeDeckRects(container, windowCount, masterCount, masterFactor, gapParams, true, newIsMaster);
+}
+
+// ---------------------------------------------------------------------------
+// Center tile
+// ---------------------------------------------------------------------------
 
 export function calculateCenterTileLayout(
   container: ContainerDims,
@@ -401,6 +464,7 @@ export function calculateCenterTileLayout(
   centerTileConfig?: CenterTileConfig,
   masterInnerPers: number[] = [],
   stackInnerPers: number[] = [],
+  newIsMaster: boolean = true,
 ): WindowRect[] {
   if (windowCount === 0) return [];
 
@@ -410,6 +474,9 @@ export function calculateCenterTileLayout(
   const nmasters = Math.min(masterCount, n);
   const stackCount = n - nmasters;
 
+  // Determine master indices based on newIsMaster
+  const masterStartIdx = newIsMaster ? 0 : stackCount;
+
   const centerMasterOverspread = centerTileConfig?.centerMasterOverspread ?? false;
   const centerWhenSingleStack  = centerTileConfig?.centerWhenSingleStack  ?? true;
   const shouldOverspread = centerMasterOverspread && n <= nmasters;
@@ -418,8 +485,7 @@ export function calculateCenterTileLayout(
 
   if (n > nmasters || !shouldOverspread) {
     mw = nmasters ? Math.round((container.width - 2 * gappoh - gappih * ie) * masterFactor) : 0;
-
-    if (stackCount !== 1 || (stackCount === 1 && centerWhenSingleStack)) {
+    if (stackCount !== 1 || centerWhenSingleStack) {
       tw = Math.round((container.width - mw) / 2 - gappoh - gappih * ie);
       mx = gappoh + tw + gappih * ie;
     } else {
@@ -433,18 +499,18 @@ export function calculateCenterTileLayout(
   }
 
   const rects: WindowRect[] = [];
-  let my  = gappov;
-  let oty = gappov;
-  let ety = gappov;
+  let my = gappov, oty = gappov, ety = gappov;
 
   for (let i = 0; i < n; i++) {
-    if (i < nmasters) {
-      const r = nmasters - i;
+    const isMaster = i >= masterStartIdx && i < masterStartIdx + nmasters;
+    if (isMaster) {
+      const masterIdx = i - masterStartIdx;
+      const r = nmasters - masterIdx;
       const h = Math.round((container.height - my - gappov - gappiv * ie * (r - 1)) / r);
       rects.push({ x: mx, y: my, width: mw, height: h });
       my += h + gappiv * ie;
     } else {
-      const stackIndex = i - nmasters;
+      const stackIndex = newIsMaster ? i - nmasters : i;
       const isRightStack = Boolean((stackIndex % 2) ^ (n % 2 === 0 ? 1 : 0));
 
       if (stackCount === 1) {
@@ -470,6 +536,10 @@ export function calculateCenterTileLayout(
   return rects;
 }
 
+// ---------------------------------------------------------------------------
+// Right tile
+// ---------------------------------------------------------------------------
+
 export function calculateRightTileLayout(
   container: ContainerDims,
   windowCount: number,
@@ -478,6 +548,7 @@ export function calculateRightTileLayout(
   gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
   masterInnerPers: number[] = [],
   stackInnerPers: number[] = [],
+  newIsMaster: boolean = true,
 ): WindowRect[] {
   if (windowCount === 0) return [];
 
@@ -487,22 +558,27 @@ export function calculateRightTileLayout(
   const nmasters = Math.min(masterCount, n);
   const stackCount = n - nmasters;
 
+  // Determine master indices based on newIsMaster
+  const masterStartIdx = newIsMaster ? 0 : stackCount;
+
   const mw =
     n > nmasters
       ? nmasters ? Math.round((container.width + gappih * ie) * masterFactor) : 0
       : container.width - 2 * gappoh + gappih * ie;
 
   const rects: WindowRect[] = [];
-  let my = gappov;
-  let ty = gappov;
+  let my = gappov, ty = gappov;
 
   for (let i = 0; i < n; i++) {
-    if (i < nmasters) {
-      const r = nmasters - i;
+    const isMaster = i >= masterStartIdx && i < masterStartIdx + nmasters;
+    if (isMaster) {
+      const masterIdx = i - masterStartIdx;
+      const r = nmasters - masterIdx;
       const h = Math.round((container.height - my - gappov - gappiv * ie * (r - 1)) / r);
       rects.push({ x: container.width - mw - gappoh + gappih * ie, y: my, width: mw - gappih * ie, height: h });
       my += h + gappiv * ie;
     } else {
+      const stackIdx = newIsMaster ? i - nmasters : i;
       const r = n - i;
       const h = Math.round((container.height - ty - gappov - gappiv * ie * (r - 1)) / r);
       rects.push({ x: gappoh, y: ty, width: container.width - mw - 2 * gappoh, height: h });
@@ -513,170 +589,116 @@ export function calculateRightTileLayout(
   return rects;
 }
 
-export function calculateScrollerLayout(
+// ---------------------------------------------------------------------------
+// Scroller  (shared helper for horizontal + vertical)
+// ---------------------------------------------------------------------------
+
+function computeScrollerRects(
   container: ContainerDims,
   windowCount: number,
-  focusIndex = 0,
-  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
+  focusIndex: number,
+  gapParams: LayoutGapParams,
   config: ScrollerConfig,
-  stackProportions: number[] = [],
+  stackProportions: number[],
+  vertical: boolean,
 ): WindowRect[] {
   if (windowCount === 0) return [];
 
-  const { gappoh, gappov, gappih } = getGaps(windowCount, gapParams);
+  const { gappoh, gappov, gappih, gappiv } = getGaps(windowCount, gapParams);
   const ie = gapEnabled(gapParams);
   const n = windowCount;
 
+  const gapFwd = vertical ? gappiv : gappih;  // gap along scroll direction
+  const outerA = vertical ? gappov : gappoh;  // outer gap along scroll direction
+  const outerB = vertical ? gappoh : gappov;  // outer gap across scroll direction
+  const sizeA  = vertical ? container.height : container.width;   // scroll-axis size
+  const sizeB  = vertical ? container.width  : container.height;  // cross-axis size
+
+  // Single-window special case
   if (n === 1 && !config.scrollerIgnoreSingle) {
-    const width  = (container.width  - 2 * gappoh) * config.scrollerDefaultProportionSingle;
-    const height = container.height - 2 * gappov;
-    return [{
-      x: Math.round(gappoh + (container.width  - 2 * gappoh - width)  / 2),
-      y: Math.round(gappov + (container.height - 2 * gappov - height) / 2),
-      width:  Math.round(width),
-      height: Math.round(height),
-    }];
+    const mainSize  = (sizeA - 2 * outerA) * config.scrollerDefaultProportionSingle;
+    const crossSize = sizeB - 2 * outerB;
+    const mainPos   = Math.round(outerA + (sizeA - 2 * outerA - mainSize) / 2);
+    const crossPos  = Math.round(outerB + (sizeB - 2 * outerB - crossSize) / 2);
+    const r = vertical
+      ? { x: crossPos, y: mainPos, width: Math.round(crossSize), height: Math.round(mainSize) }
+      : { x: mainPos, y: crossPos, width: Math.round(mainSize),  height: Math.round(crossSize) };
+    return [r];
   }
 
   const getProportion = (i: number) => stackProportions[i] ?? config.scrollerDefaultProportion;
-  const maxClientWidth = container.width - 2 * config.scrollerStructs - gappih * ie;
+  const maxClient = sizeA - 2 * config.scrollerStructs - gapFwd * ie;
 
   const needOverspread =
     config.scrollerPreferOverspread && n > 1 &&
     (focusIndex === 0 || focusIndex === n - 1) &&
     getProportion(focusIndex) < 1.0;
 
-  const overspreadLeft = needOverspread && focusIndex === 0;
+  const overspreadFirst = needOverspread && focusIndex === 0;
   const needCenter = config.scrollerFocusCenter || n === 1 || (config.scrollerPreferCenter && !needOverspread);
 
-  const focusWidth  = maxClientWidth * getProportion(focusIndex);
-  const focusHeight = container.height - 2 * gappov;
-  const focusY = gappov + (container.height - 2 * gappov - focusHeight) / 2;
+  const focusMainSize  = maxClient * getProportion(focusIndex);
+  const focusCrossSize = sizeB - 2 * outerB;
+  const focusCrossPos  = outerB + (sizeB - 2 * outerB - focusCrossSize) / 2;
 
-  let focusX = config.scrollerStructs;
+  let focusMainPos = config.scrollerStructs;
   if (needCenter) {
-    focusX = (container.width - focusWidth) / 2;
+    focusMainPos = (sizeA - focusMainSize) / 2;
   } else if (needOverspread) {
-    focusX = overspreadLeft
+    focusMainPos = overspreadFirst
       ? config.scrollerStructs
-      : container.width - focusWidth - config.scrollerStructs;
-  } else if (focusIndex > container.width / 2) {
-    focusX = container.width - focusWidth - config.scrollerStructs;
+      : sizeA - focusMainSize - config.scrollerStructs;
+  } else if (focusIndex > sizeA / 2) {
+    focusMainPos = sizeA - focusMainSize - config.scrollerStructs;
   }
 
-  const rects: WindowRect[] = new Array(n);
-  rects[focusIndex] = {
-    x: Math.round(focusX), y: Math.round(focusY),
-    width: Math.round(focusWidth), height: Math.round(focusHeight),
-  };
+  const mainPositions = new Array<number>(n);
+  const mainSizes     = new Array<number>(n);
+  mainPositions[focusIndex] = focusMainPos;
+  mainSizes[focusIndex]     = focusMainSize;
 
   for (let i = focusIndex - 1; i >= 0; i--) {
-    const w = maxClientWidth * getProportion(i);
-    rects[i] = {
-      x: Math.round(rects[i + 1].x - gappih * ie - w),
-      y: Math.round(focusY),
-      width: Math.round(w), height: Math.round(focusHeight),
-    };
+    const s = maxClient * getProportion(i);
+    mainSizes[i]     = s;
+    mainPositions[i] = mainPositions[i + 1] - gapFwd * ie - s;
   }
-
   for (let i = focusIndex + 1; i < n; i++) {
-    const w = maxClientWidth * getProportion(i);
-    rects[i] = {
-      x: Math.round(rects[i - 1].x + rects[i - 1].width + gappih * ie),
-      y: Math.round(focusY),
-      width: Math.round(w), height: Math.round(focusHeight),
-    };
+    const s = maxClient * getProportion(i);
+    mainSizes[i]     = s;
+    mainPositions[i] = mainPositions[i - 1] + mainSizes[i - 1] + gapFwd * ie;
   }
 
-  return rects;
+  return Array.from({ length: n }, (_, i) => ({
+    x:      Math.round(vertical ? focusCrossPos      : mainPositions[i]),
+    y:      Math.round(vertical ? mainPositions[i]   : focusCrossPos),
+    width:  Math.round(vertical ? focusCrossSize      : mainSizes[i]),
+    height: Math.round(vertical ? mainSizes[i]        : focusCrossSize),
+  }));
+}
+
+export function calculateScrollerLayout(
+  container: ContainerDims, windowCount: number, focusIndex = 0,
+  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS, config: ScrollerConfig, stackProportions: number[] = [],
+): WindowRect[] {
+  return computeScrollerRects(container, windowCount, focusIndex, gapParams, config, stackProportions, false);
 }
 
 export function calculateVerticalScrollerLayout(
-  container: ContainerDims,
-  windowCount: number,
-  focusIndex = 0,
-  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS,
-  config: ScrollerConfig,
-  stackProportions: number[] = [],
+  container: ContainerDims, windowCount: number, focusIndex = 0,
+  gapParams: LayoutGapParams = DEFAULT_GAP_PARAMS, config: ScrollerConfig, stackProportions: number[] = [],
 ): WindowRect[] {
-  if (windowCount === 0) return [];
-
-  const { gappoh, gappov, gappiv } = getGaps(windowCount, gapParams);
-  const ie = gapEnabled(gapParams);
-  const n = windowCount;
-
-  if (n === 1 && !config.scrollerIgnoreSingle) {
-    const height = (container.height - 2 * gappov) * config.scrollerDefaultProportionSingle;
-    const width  = container.width - 2 * gappoh;
-    return [{
-      x: Math.round(gappoh + (container.width  - 2 * gappoh - width)  / 2),
-      y: Math.round(gappov + (container.height - 2 * gappov - height) / 2),
-      width:  Math.round(width),
-      height: Math.round(height),
-    }];
-  }
-
-  const getProportion = (i: number) => stackProportions[i] ?? config.scrollerDefaultProportion;
-  const maxClientHeight = container.height - 2 * config.scrollerStructs - gappiv * ie;
-
-  const needOverspread =
-    config.scrollerPreferOverspread && n > 1 &&
-    (focusIndex === 0 || focusIndex === n - 1) &&
-    getProportion(focusIndex) < 1.0;
-
-  const overspreadUp = needOverspread && focusIndex === 0;
-  const needCenter = config.scrollerFocusCenter || n === 1 || (config.scrollerPreferCenter && !needOverspread);
-
-  const focusHeight = maxClientHeight * getProportion(focusIndex);
-  const focusWidth  = container.width - 2 * gappoh;
-  const focusX = gappoh + (container.width - 2 * gappoh - focusWidth) / 2;
-
-  let focusY = config.scrollerStructs;
-  if (needCenter) {
-    focusY = (container.height - focusHeight) / 2;
-  } else if (needOverspread) {
-    focusY = overspreadUp
-      ? config.scrollerStructs
-      : container.height - focusHeight - config.scrollerStructs;
-  } else if (focusIndex > container.height / 2) {
-    focusY = container.height - focusHeight - config.scrollerStructs;
-  }
-
-  const rects: WindowRect[] = new Array(n);
-  rects[focusIndex] = {
-    x: Math.round(focusX), y: Math.round(focusY),
-    width: Math.round(focusWidth), height: Math.round(focusHeight),
-  };
-
-  for (let i = focusIndex - 1; i >= 0; i--) {
-    const h = maxClientHeight * getProportion(i);
-    rects[i] = {
-      x: Math.round(focusX),
-      y: Math.round(rects[i + 1].y - gappiv * ie - h),
-      width: Math.round(focusWidth), height: Math.round(h),
-    };
-  }
-
-  for (let i = focusIndex + 1; i < n; i++) {
-    const h = maxClientHeight * getProportion(i);
-    rects[i] = {
-      x: Math.round(focusX),
-      y: Math.round(rects[i - 1].y + rects[i - 1].height + gappiv * ie),
-      width: Math.round(focusWidth), height: Math.round(h),
-    };
-  }
-
-  return rects;
+  return computeScrollerRects(container, windowCount, focusIndex, gapParams, config, stackProportions, true);
 }
 
+// ---------------------------------------------------------------------------
+// TGMix + Overview
+// ---------------------------------------------------------------------------
+
 export function calculateTgmixLayout(
-  container: ContainerDims,
-  windowCount: number,
-  masterCount = 1,
-  masterFactor = 0.5,
+  container: ContainerDims, windowCount: number, masterCount = 1, masterFactor = 0.5, newIsMaster = true,
 ): WindowRect[] {
   return windowCount <= 3
-    ? calculateTileLayout(container, windowCount, masterCount, masterFactor)
+    ? calculateTileLayout(container, windowCount, masterCount, masterFactor, DEFAULT_GAP_PARAMS, [], [], newIsMaster)
     : calculateGridLayout(container, windowCount);
 }
 
@@ -687,7 +709,6 @@ export function calculateOverviewLayout(
   overviewGapInner = 5,
 ): WindowRect[] {
   if (windowCount === 0) return [];
-
   const n = windowCount;
 
   if (n === 1) {
@@ -712,11 +733,6 @@ export function calculateOverviewLayout(
     const col = i % cols;
     const row = Math.floor(i / cols);
     const cx  = overviewGapOuter + col * (cellWidth + overviewGapInner) + (overcols && i >= n - overcols ? dx : 0);
-    return {
-      x: cx,
-      y: overviewGapOuter + row * (cellHeight + overviewGapInner),
-      width:  Math.round(cellWidth),
-      height: Math.round(cellHeight),
-    };
+    return { x: cx, y: overviewGapOuter + row * (cellHeight + overviewGapInner), width: Math.round(cellWidth), height: Math.round(cellHeight) };
   });
 }
