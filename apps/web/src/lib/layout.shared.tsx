@@ -18,7 +18,7 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <span className="flex items-center gap-2">
-          <img src="/logo.svg" alt="mangowm" className="w-5 h-5" />
+          <img src="/mango-web/logo.svg" alt="mangowm" className="w-5 h-5" />
           <span className="font-medium">mangowm</span>
         </span>
       ),

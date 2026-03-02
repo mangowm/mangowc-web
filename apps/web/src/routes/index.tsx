@@ -13,13 +13,13 @@ const DiscordIcon = memo(function DiscordIcon() {
   return (
     <span className="flex items-center">
       <img
-        src="/Discord-Symbol-Black.svg"
+        src="/mango-web/Discord-Symbol-Black.svg"
         alt=""
         aria-hidden="true"
         className="h-5 w-5 dark:hidden"
       />
       <img
-        src="/Discord-Symbol-White.svg"
+        src="/mango-web/Discord-Symbol-White.svg"
         alt=""
         aria-hidden="true"
         className="hidden h-5 w-5 dark:block"
@@ -29,9 +29,9 @@ const DiscordIcon = memo(function DiscordIcon() {
 });
 
 const NAV_LINKS: LinkItemType[] = [
-  { text: "Docs", url: "/docs" },
-  { text: "Editor", url: "/editor" },
-  { text: "Releases", url: "/releases" },
+  { text: "Docs", url: "/mango-web/docs" },
+  { text: "Editor", url: "/mango-web/editor" },
+  { text: "Releases", url: "/mango-web/releases" },
   {
     type: "icon",
     url: "https://discord.gg/CPjbDxesh5",
