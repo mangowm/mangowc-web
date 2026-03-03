@@ -39,7 +39,6 @@ function generateConfig(params: LayoutParams, _monitor: MonitorParams): string {
     `scroller_focus_center = ${boolToInt(params.scrollerFocusCenter)}`,
     `scroller_prefer_center = ${boolToInt(params.scrollerPreferCenter)}`,
     `scroller_prefer_overspread = ${boolToInt(params.scrollerPreferOverspread)}`,
-    `edge_scroller_pointer_focus = ${boolToInt(params.scrollerEdgePointerFocus)}`,
     "",
     "# Overview",
     `overviewgappi = ${params.overviewGapInner}`,

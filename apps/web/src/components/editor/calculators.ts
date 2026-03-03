@@ -27,7 +27,6 @@ export interface ScrollerConfig {
   scrollerFocusCenter: boolean;
   scrollerPreferCenter: boolean;
   scrollerPreferOverspread: boolean;
-  scrollerEdgePointerFocus: boolean;
 }
 
 export interface CenterTileConfig {

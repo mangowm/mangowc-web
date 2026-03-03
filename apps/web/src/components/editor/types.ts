@@ -196,7 +196,6 @@ export interface LayoutConfig {
   scrollerFocusCenter: boolean;
   scrollerPreferCenter: boolean;
   scrollerPreferOverspread: boolean;
-  scrollerEdgePointerFocus: boolean;
   overviewGapInner: number;
   overviewGapOuter: number;
 }
@@ -231,7 +230,6 @@ export const DEFAULT_LAYOUT_PARAMS: LayoutParams = {
   scrollerFocusCenter: false,
   scrollerPreferCenter: false,
   scrollerPreferOverspread: true,
-  scrollerEdgePointerFocus: true,
   overviewGapInner: 5,
   overviewGapOuter: 30,
 };

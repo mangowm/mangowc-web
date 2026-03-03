@@ -353,11 +353,6 @@ function ScrollerSection({
         checked={params.scrollerPreferOverspread}
         onCheckedChange={(v) => onUpdate({ scrollerPreferOverspread: v })}
       />
-      <SwitchRow
-        label="Edge Pointer Focus"
-        checked={params.scrollerEdgePointerFocus}
-        onCheckedChange={(v) => onUpdate({ scrollerEdgePointerFocus: v })}
-      />
     </ConfigSection>
   );
 }
@@ -420,7 +415,6 @@ function useLayoutRects(
       scrollerFocusCenter: params.scrollerFocusCenter,
       scrollerPreferCenter: params.scrollerPreferCenter,
       scrollerPreferOverspread: params.scrollerPreferOverspread,
-      scrollerEdgePointerFocus: params.scrollerEdgePointerFocus,
     };
     const centerTileConfig: CenterTileConfig = {
       centerMasterOverspread: params.centerMasterOverspread,
