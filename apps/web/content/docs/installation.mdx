@@ -167,7 +167,7 @@ The repository provides a Flake with a NixOS module.
 # configuration.nix (or any other file that you import)
 {inputs, ...}: {
   imports = [
-    inputs.mangowm.nixosModules.default
+    inputs.mangowm.nixosModules.mango
     # .. other imports ...
   ];
 
@@ -189,7 +189,7 @@ The repository provides a Flake with a NixOS module.
   in {
     nixosConfigurations.YourHostName = lib.nixosSystem {
       modules = [
-        mangowm.nixosModules.default # or inputs.mangowm.nixosModules.default
+        mangowm.nixosModules.mango # or inputs.mangowm.nixosModules.mango
         # other imports ...
       ];
     };
