@@ -10,7 +10,7 @@
   --color-fd-background: oklch(1 0 0);
   --color-fd-foreground: oklch(0.13 0.02 264);
   --color-fd-muted: oklch(0.95 0.01 264);
-  --color-fd-muted-foreground: oklch(0.40 0.02 264);
+  --color-fd-muted-foreground: oklch(0.4 0.02 264);
   --color-fd-popover: oklch(1 0 0);
   --color-fd-popover-foreground: oklch(0.13 0.02 264);
   --color-fd-card: oklch(1 0 0);

@@ -56,9 +56,23 @@ export function useLayoutRects(
       case "vertical-grid":
         return calculateVerticalGridLayout(container, n, gapParams);
       case "scroller":
-        return calculateScrollerLayout(container, n, params.focusedWindow, gapParams, scrollerConfig, []);
+        return calculateScrollerLayout(
+          container,
+          n,
+          params.focusedWindow,
+          gapParams,
+          scrollerConfig,
+          [],
+        );
       case "vertical-scroller":
-        return calculateVerticalScrollerLayout(container, n, params.focusedWindow, gapParams, scrollerConfig, []);
+        return calculateVerticalScrollerLayout(
+          container,
+          n,
+          params.focusedWindow,
+          gapParams,
+          scrollerConfig,
+          [],
+        );
       case "monocle":
         return calculateMonocleLayout(container, n);
       case "deck":
