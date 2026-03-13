@@ -26,9 +26,9 @@ async function fetchReleases() {
   const data: GitHubRelease[] = await res.json();
   const releases = data.filter((r) => !r.draft);
 
-  const outPath = resolve("public/releases.json");
+  const outPath = resolve("src/releases.json");
   writeFileSync(outPath, JSON.stringify(releases, null, 2), "utf-8");
-  console.log(`✓ Written ${releases.length} releases to public/releases.json`);
+  console.log(`✓ Written ${releases.length} releases to src/releases.json`);
 
   if (releases.length > 0) {
     const latest = releases[0];
